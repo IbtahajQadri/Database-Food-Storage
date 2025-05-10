@@ -8,8 +8,11 @@ A browser-based web application for managing household food inventory. It allows
 ## 🛠️ Local Setup Instructions
 
 ### Step 1: Clone the Repository
+
+1. Clone Repo with the following git command.
 > git clone https://gitlab.com/thi-wi/sweng/m-egm/team-25-03.git
-Move into the project repository.
+
+2. Move into the project repository.
 > cd team-25-03
 
 ### Step 2: Create and Activate Virtual Environment
