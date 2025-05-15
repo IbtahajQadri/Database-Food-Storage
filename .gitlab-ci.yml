@@ -1,6 +1,5 @@
 stages:
   - test
-  - build
   - release
 
 image: python:latest
@@ -12,19 +11,6 @@ test-job:
     - echo "Running tests."
 
 
-build-docker:
-  stage: build
-  image: docker:20.10.16
-  services:
-    - docker:20.10.16-dind
-  script:
-    - echo "Building docker image"
-    - docker build --pull -t $CI_REGISTRY_IMAGE .
-
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-
-
 release-docker:
   stage: release
   image: docker:20.10.16
@@ -34,8 +20,9 @@ release-docker:
     - echo "$CI_REGISTRY_PASSWORD" |
         docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
   script:
+    - echo "Building docker image"
+    - docker build --pull -t $CI_REGISTRY_IMAGE .
     - echo "Pushing Docker image to registry"
     - docker push $CI_REGISTRY_IMAGE
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: always
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
