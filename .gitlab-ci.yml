@@ -1,0 +1,24 @@
+stages:
+  - test
+  - build
+  - release
+
+image: python:latest
+
+
+test-job:
+  stage: test
+  script:
+    - echo "Running tests."
+
+
+build-docker:
+  stage: build
+  script:
+    - echo "Building docker image"
+
+
+deploy-docker:
+  stage: release
+  script:
+    - echo "Running docker deploy"
