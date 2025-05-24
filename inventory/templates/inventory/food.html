@@ -1,0 +1,26 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="food-container">
+    <h2>Manage Food Items</h2>
+    <button id="create-food-btn" onclick="showCreateFoodForm()">Create Food item</button>
+    <button id="modify-food-btn" onclick="showModifyFoodForm()">Modify Food item</button>
+    <button id="delete-food-btn" onclick="showDeleteFoodForm()">Delete Food item</button>
+</div>
+
+<div id="food-form-container" style="margin-top: 30px; max-width: 500px; margin-left: auto; margin-right: auto;"></div>
+
+<script>
+    function showCreateFoodForm() {
+        document.getElementById("food-form-container").innerHTML = "<p>Create food form will appear here.</p>";
+    }
+
+    function showModifyFoodForm() {
+        document.getElementById("food-form-container").innerHTML = "<p>Modify food form will appear here.</p>";
+    }
+
+    function showDeleteFoodForm() {
+        document.getElementById("food-form-container").innerHTML = "<p>Delete food form will appear here.</p>";
+    }
+</script>
+{% endblock %}

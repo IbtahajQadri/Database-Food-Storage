@@ -1,0 +1,26 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="category-container">
+    <h2>Manage Categories</h2>
+    <button id="create-btn" onclick="showCreateForm()">Create Category</button>
+    <button id="modify-btn" onclick="showModifyForm()">Modify Category</button>
+    <button id="delete-btn" onclick="showDeleteForm()">Delete Category</button>
+</div>
+
+<div id="form-container" style="margin-top: 30px; max-width: 500px; margin-left: auto; margin-right: auto;"></div>
+
+<script>
+    function showCreateForm() {
+        document.getElementById("form-container").innerHTML = "<p>Create form will appear here.</p>";
+    }
+
+    function showModifyForm() {
+        document.getElementById("form-container").innerHTML = "<p>Modify form will appear here.</p>";
+    }
+
+    function showDeleteForm() {
+        document.getElementById("form-container").innerHTML = "<p>Delete form will appear here.</p>";
+    }
+</script>
+{% endblock %}

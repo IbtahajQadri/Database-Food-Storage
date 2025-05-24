@@ -1,0 +1,32 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Food Storage App</title>
+    <link rel="stylesheet" href="{% static 'inventory/css/styles.css' %}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <h1>Food Storage App</h1>
+    </header>
+    
+    <!-- Navigation Tabs -->
+    <nav class="navbar">
+        <ul class="nav-list">
+            <li><a href="{% url 'dashboard' %}" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
+            <li><a href="{% url 'category' %}" class="{% if request.path == '/category/' %}active{% endif %}">Category Management</a></li>
+            <li><a href="{% url 'food' %}" class="{% if request.path == '/food/' %}active{% endif %}">Food Management</a></li>
+            <li><a href="{% url 'shopping' %}" class="{% if request.path == '/shopping/' %}active{% endif %}">Shopping List</a></li>
+            <li><a href="{% url 'search' %}" class="{% if request.path == '/search/' %}active{% endif %}">Search</a></li>
+        </ul>
+    </nav>
+
+    <!-- Page Content -->
+    <main></main>
+
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

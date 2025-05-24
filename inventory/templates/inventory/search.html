@@ -1,0 +1,23 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="search-container">
+    <h2>Welcome to the search menu</h2>
+    <p>Select a filter from the dropdown menu to refine your search</p>
+
+    <form method="GET" action="{% url 'search' %}">
+        <div class="search-controls">
+            <label for="filter">Filter:</label>
+            <select name="filter" id="filter">
+                <option value="">-- Select an option --</option>
+                <option value="category">Based on Food Category</option>
+                <option value="best_before">Based on Best Before Date</option>
+            </select>
+
+            <input type="text" name="query" placeholder="Search..." />
+            <button type="submit">Search</button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
