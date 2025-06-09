@@ -134,3 +134,66 @@ button:hover {
     margin: 10px 10px 10px 0;
     min-width: 150px;
 }
+
+.result-body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #fafafa;
+    padding: 40px;
+}
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+th,
+td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #444;
+}
+
+tr:hover {
+    background: #fdfdfd;
+}
+
+.expiry-warning {
+    color: #d99100;
+    font-weight: bold;
+}
+
+.expiry-ok {
+    color: #3ebf6f;
+    font-weight: bold;
+}
+
+.footer {
+    margin-top: 10px;
+    text-align: right;
+    color: #555;
+}
+
+.checkbox {
+    text-align: center;
+}
+
+.sortable::after {
+    content: ' \25B2';
+    /* ▲ */
+    font-size: 0.7em;
+    color: #999;
+}
+
+.expired-product {
+    color: #fb0808;
+    font-weight: bold;
+}
