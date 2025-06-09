@@ -5,19 +5,78 @@
     <h2>Welcome to the search menu</h2>
     <p>Select a filter from the dropdown menu to refine your search</p>
 
-    <form method="GET" action="{% url 'search' %}">
+    <form method="GET" id="searchForm">
         <div class="search-controls">
             <label for="filter">Filter:</label>
             <select name="filter" id="filter">
                 <option value="">-- Select an option --</option>
                 <option value="category">Based on Food Category</option>
-                <option value="best_before">Based on Best Before Date</option>
+                <option value="best_before">Based on Best Before Date (YYYY-MM-DD)</option>
             </select>
 
-            <input type="text" name="query" placeholder="Search..." />
+            <input type="text" name="search" id="queryInput" placeholder="Search..." />
             <button type="submit">Search</button>
         </div>
     </form>
-
 </div>
+{% if items %}
+<div class="result-body">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Quantity</th>
+        <th>Unit</th>
+        <th>Best before date</th>
+        <th>Expiry Status</th>
+        <th>Brand</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+      <tr>
+        <td><strong>{{item.name}}</strong></td>
+        <td>{{item.category_name}}</td>
+        <td>{{item.quantity}}</td>
+        <td>{{item.unit}}</td>
+        <td>{{item.best_before_date}}</td>
+        <td><span class="expiry-warning">⚠ {{item.expiry_status}}</span></td>
+        <td>{{item.brand}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <strong>{{item_count}} food items</strong>
+  </div>
+</div>
+{% endif %}
+<script>
+  const form = document.getElementById('searchForm');
+  const filter = document.getElementById('filter');
+  const queryInput = document.getElementById('queryInput');
+
+  form.addEventListener('submit', function (e) {
+    const selected = filter.value;
+    const query = queryInput.value.trim();
+
+
+    // Set action URL based on filter
+    if (selected === 'category') {
+      form.action = '/search/category';
+    } else if (selected === 'best_before') {
+      form.action = '/search/best_before';
+    } else {
+      if (queryInput.value.trim() !== '') {
+        form.action = '/search';
+      } else {
+        e.preventDefault();
+        alert('Please select a valid Search filter.');
+        return;
+      }
+    }
+  });
+</script>
 {% endblock %}
