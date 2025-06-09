@@ -15,6 +15,7 @@
             </select>
 
             <input type="text" name="search" id="queryInput" placeholder="Search..." />
+            <!-- <input type="hidden" name="render" value="1" /> -->
             <button type="submit">Search</button>
         </div>
     </form>
@@ -30,26 +31,24 @@
         <th>Unit</th>
         <th>Best before date</th>
         <th>Expiry Status</th>
-        <th>Brand</th>
       </tr>
     </thead>
     <tbody>
         {% for item in items %}
       <tr>
         <td><strong>{{item.name}}</strong></td>
-        <td>{{item.category_name}}</td>
+        <td>{{item.category.name}}</td>
         <td>{{item.quantity}}</td>
-        <td>{{item.unit}}</td>
-        <td>{{item.best_before_date}}</td>
-        <td><span class="expiry-warning">⚠ {{item.expiry_status}}</span></td>
-        <td>{{item.brand}}</td>
+        <td>{{item.category.unit}}</td>
+        <td>{{item.best_before}}</td>
+        <td><span class="{% if item.is_expired %}expired-product{% elif item.is_expiring_soon %}expiry-warning{% else %}expiry-ok{% endif %}">{% if item.is_expiring_soon %}⚠{% endif %} {{item.expiry_status}}</span></td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 
   <div class="footer">
-    <strong>{{item_count}} food items</strong>
+    <strong>{{ item_count }} food item{{ item_count|pluralize }}</strong>
   </div>
 </div>
 {% endif %}
@@ -66,11 +65,14 @@
     // Set action URL based on filter
     if (selected === 'category') {
       form.action = '/search/category';
+      // queryInput.name = "category_name"
     } else if (selected === 'best_before') {
-      form.action = '/search/best_before';
+      form.action = '/search/best_before_date';
+      // queryInput.name = "expires_before"
     } else {
       if (queryInput.value.trim() !== '') {
-        form.action = '/search';
+        form.action = '/search/';
+        // queryInput.name = "search"
       } else {
         e.preventDefault();
         alert('Please select a valid Search filter.');
