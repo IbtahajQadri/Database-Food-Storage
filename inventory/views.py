@@ -1,8 +1,9 @@
-from django.shortcuts import render, get_object_or_404
-from .models import Category
-from django.db import IntegrityError
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from .models import Category, Food
+from datetime import date
+from datetime import datetime
 import logging
-
 logger = logging.getLogger(__name__)
 
 
@@ -111,7 +112,127 @@ def category_view(request):
 
 
 def food_view(request):
-    return render(request, 'inventory/food.html')
+    action = request.GET.get('action')
+    success_message = ''
+    error_message = ''
+    context = {'action': action, 'today': date.today().isoformat()}
+
+    context['categories'] = Category.objects.all()
+    context['foods'] = Food.objects.all()
+
+    # Make sure food_items is included for modify/delete pages
+    if request.method == 'GET' and action in ['modify', 'delete']:
+        context['food_items'] = Food.objects.all()
+
+    if request.method == 'POST':
+        submit_type = request.POST.get('submit_type')
+
+        if action == 'create':
+            name = request.POST.get('name')
+            category_id = request.POST.get('category_id')
+            quantity = request.POST.get('quantity')
+            best_before = request.POST.get('best_before')
+
+            selected_category = Category.objects.filter(id=category_id).first()
+            context.update({
+                'selected_category': selected_category,
+                'name': name,
+                'quantity': quantity,
+                'best_before': best_before,
+            })
+
+            if submit_type == 'update_unit':
+                return render(request, 'inventory/food.html', context)
+
+            if not name or not category_id or not quantity or not best_before:
+                error_message = 'Please fill in all fields.'
+            else:
+                try:
+                    quantity = float(quantity)
+                    if quantity < 0:
+                        raise ValueError('Quantity must be non-negative.')
+
+                    best_before_date = date.fromisoformat(best_before)
+                    if best_before_date < date.today():
+                        error_message = 'Best before date cannot be in the past.'
+                    else:
+                        category = get_object_or_404(Category, pk=category_id)
+                        food = Food(name=name, category=category, quantity=quantity, best_before=best_before_date)
+                        food.save()
+                        success_message = 'Food item created successfully!'
+                        context.update({
+                            'name': '',
+                            'quantity': '',
+                            'best_before': '',
+                            'selected_category': None
+                        })
+                except ValueError:
+                    error_message = 'Quantity must be a number and non-negative.'
+
+        elif action == 'modify':
+            food_items = Food.objects.all()
+            context['food_items'] = food_items
+            context['categories'] = Category.objects.all()
+            success_message = ''
+            error_message = ''
+            
+            if request.method == 'POST':
+                food_id = request.POST.get('food_id')
+                if not food_id:
+                    error_message = 'Please select a food item.'
+                else:
+                    selected_food = Food.objects.filter(id=food_id).first()
+                    context['selected_food'] = selected_food
+
+                    # If only food_id sent (dropdown changed), just reload form with data
+                    if not request.POST.get('name'):
+                        # just reload the form with selected food's data
+                        pass
+                    else:
+                        # Full form submission for modification
+                        name = request.POST.get('name')
+                        category_id = request.POST.get('category_id')
+                        quantity = request.POST.get('quantity')
+                        best_before = request.POST.get('best_before')
+
+                        if not (name and category_id and quantity and best_before):
+                            error_message = 'Please fill in all fields.'
+                        else:
+                            try:
+                                quantity = float(quantity)
+                                if quantity < 0:
+                                    raise ValueError('Quantity must be non-negative.')
+
+                                best_before_date = date.fromisoformat(best_before)
+                                if best_before_date < date.today():
+                                    error_message = 'Best before date cannot be in the past.'
+                                else:
+                                    food = get_object_or_404(Food, pk=food_id)
+                                    food.name = name
+                                    food.category_id = category_id
+                                    food.quantity = quantity
+                                    food.best_before = best_before_date
+                                    food.save()
+                                    success_message = 'Food item modified successfully!'
+                                    context['selected_food'] = food  # update selected food
+                            except ValueError:
+                                error_message = 'Quantity must be a number and non-negative.'
+
+
+        elif action == 'delete':
+            food_id = request.POST.get('food_id')
+            if not food_id:
+                error_message = 'Please select a food item to delete.'
+            else:
+                food = get_object_or_404(Food, pk=food_id)
+                food.delete()
+                success_message = 'Food item deleted successfully!'
+            context['food_items'] = Food.objects.all()
+
+    context['success_message'] = success_message
+    context['error_message'] = error_message
+
+    return render(request, 'inventory/food.html', context)
 
 def search_view(request):
     return render(request, 'inventory/search.html')
