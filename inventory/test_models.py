@@ -19,3 +19,22 @@ class CategoryModelTest(TestCase):
         with self.assertRaises(IntegrityError):
             Category.objects.create(name='Fruits', unit='pieces', ideal_quantity=10.0)
 
+    def test_missing_name_raises_error(self):
+        # Ensures that creating a category with a missing name raises an IntegrityError
+        with self.assertRaises(IntegrityError):
+            Category.objects.create(name=None, unit='liters', ideal_quantity=5.0)
+
+    def test_missing_unit_raises_error(self):
+        # Ensures that creating a category with a missing unit raises an IntegrityError
+        with self.assertRaises(IntegrityError):
+            Category.objects.create(name='Dairy', unit=None, ideal_quantity=5.0)
+
+    def test_missing_ideal_quantity_raises_error(self):
+        # Ensures that creating a category without an ideal_quantity raises an IntegrityError
+        with self.assertRaises(IntegrityError):
+            Category.objects.create(name='Bakery', unit='packs', ideal_quantity=None)
+
+    def test_str_representation(self):
+        # Tests that the __str__ method of Category returns the name
+        category = Category.objects.create(name='Meat', unit='kg', ideal_quantity=30)
+        self.assertEqual(str(category), 'Meat')
