@@ -38,3 +38,16 @@ class CategoryModelTest(TestCase):
         # Tests that the __str__ method of Category returns the name
         category = Category.objects.create(name='Meat', unit='kg', ideal_quantity=30)
         self.assertEqual(str(category), 'Meat')
+
+    def test_update_category(self):
+        # Tests that a category can be updated and changes persist
+        category = Category.objects.create(name='Seafood', unit='kg', ideal_quantity=10)
+        category.name = 'Fresh Seafood'
+        category.unit = 'pieces'
+        category.ideal_quantity = 25
+        category.save()
+
+        updated = Category.objects.get(id=category.id)
+        self.assertEqual(updated.name, 'Fresh Seafood')
+        self.assertEqual(updated.unit, 'pieces')
+        self.assertEqual(updated.ideal_quantity, 25)
