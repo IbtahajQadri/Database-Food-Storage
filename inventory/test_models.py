@@ -51,3 +51,28 @@ class CategoryModelTest(TestCase):
         self.assertEqual(updated.name, 'Fresh Seafood')
         self.assertEqual(updated.unit, 'pieces')
         self.assertEqual(updated.ideal_quantity, 25)
+
+    def test_delete_category(self):
+        # Tests that a category can be deleted and is no longer retrievable
+        category = Category.objects.create(name='Snacks', unit='packs', ideal_quantity=12)
+        category_id = category.id
+        category.delete()
+        with self.assertRaises(Category.DoesNotExist):
+            Category.objects.get(id=category_id)
+
+    def test_name_uniqueness_case_sensitivity(self):
+        Category.objects.create(name='Drinks', unit='liters', ideal_quantity=5.0)
+        # This will pass if uniqueness is case-sensitive
+        Category.objects.create(name='drinks', unit='liters', ideal_quantity=5.0)
+
+    def test_bulk_create_categories(self):
+        Category.objects.bulk_create([
+            Category(name='A', unit='u', ideal_quantity=1),
+            Category(name='B', unit='u', ideal_quantity=2)
+        ])
+        self.assertEqual(Category.objects.count(), 2)
+
+    def test_filter_by_unit(self):
+        Category.objects.create(name='Juice', unit='liters', ideal_quantity=3)
+        result = Category.objects.filter(unit='liters')
+        self.assertEqual(result.count(), 1)
