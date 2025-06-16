@@ -1,6 +1,6 @@
 from django.test import TestCase
 from datetime import date
-from inventory.models import Category
+from inventory.models import Category, Food
 from django.db import IntegrityError
 
 
@@ -76,3 +76,58 @@ class CategoryModelTest(TestCase):
         Category.objects.create(name='Juice', unit='liters', ideal_quantity=3)
         result = Category.objects.filter(unit='liters')
         self.assertEqual(result.count(), 1)
+
+
+    def test_ideal_quantity_accepts_floats(self):
+        # Ensures that float values for ideal_quantity are stored accurately
+        category = Category.objects.create(name='Grains', unit='kg', ideal_quantity=13.75)
+        self.assertEqual(category.ideal_quantity, 13.75)
+
+
+    def test_multiple_category_creation_and_count(self):
+        # Tests creating multiple categories and checks that count is correct
+        Category.objects.create(name='A', unit='kg', ideal_quantity=5.0)
+        Category.objects.create(name='B', unit='liters', ideal_quantity=10.0)
+        Category.objects.create(name='C', unit='pieces', ideal_quantity=15.0)
+        self.assertEqual(Category.objects.count(), 3)
+
+    def test_zero_ideal_quantity(self):
+        # Tests that a category can be created with ideal_quantity set to 0.0
+        category = Category.objects.create(name='Empty', unit='kg', ideal_quantity=0.0)
+        self.assertEqual(category.ideal_quantity, 0.0)
+
+    def test_negative_ideal_quantity(self):
+        # Tests that a category can be created with a negative ideal_quantity
+        category = Category.objects.create(name='Negative', unit='kg', ideal_quantity=-10.0)
+        self.assertEqual(category.ideal_quantity, -10.0)
+
+
+class FoodModelTest(TestCase):
+    def setUp(self):
+        # Create a category to associate with food items
+        self.category = Category.objects.create(name='Vegetables', unit='kg', ideal_quantity=10.0)
+
+    def test_create_and_read_food(self):
+        # Tests if a food item can be created and correctly retrieved
+        Food.objects.create(name='Carrot', category=self.category, quantity=5.0, best_before=date(2025, 12, 31))
+        food = Food.objects.get(name='Carrot')
+        self.assertEqual(food.name, 'Carrot')
+        self.assertEqual(food.category, self.category)
+        self.assertEqual(food.quantity, 5.0)
+        self.assertEqual(food.best_before, date(2025, 12, 31))
+
+    def test_food_str_representation(self):
+        # Tests that the __str__ method of Food returns the name
+        food = Food.objects.create(name='Potato', category=self.category, quantity=3.0, best_before=date(2025, 11, 30))
+        self.assertEqual(str(food), 'Potato')
+
+    def test_food_quantity_accepts_float(self):
+        # Verifies that quantity can be a floating-point number
+        food = Food.objects.create(name='Tomato', category=self.category, quantity=2.75, best_before=date(2025, 10, 10))
+        self.assertEqual(food.quantity, 2.75)
+
+    def test_create_food_with_past_best_before(self):
+        # Allows creation of food with past best_before date (no built-in validation)
+        food = Food.objects.create(name='Old Apple', category=self.category, quantity=1.0, best_before=date(2020, 1, 1))
+        self.assertEqual(food.best_before, date(2020, 1, 1))
+
