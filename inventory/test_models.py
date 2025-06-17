@@ -131,3 +131,42 @@ class FoodModelTest(TestCase):
         food = Food.objects.create(name='Old Apple', category=self.category, quantity=1.0, best_before=date(2020, 1, 1))
         self.assertEqual(food.best_before, date(2020, 1, 1))
 
+    def test_missing_name_raises_error(self):
+        # Ensures that creating a food without a name raises an IntegrityError
+        with self.assertRaises(IntegrityError):
+            Food.objects.create(name=None, category=self.category, quantity=1.0, best_before=date(2025, 10, 10))
+
+    def test_missing_quantity_raises_error(self):
+        # Ensures that creating a food without a quantity raises an IntegrityError
+        with self.assertRaises(IntegrityError):
+            Food.objects.create(name='Lettuce', category=self.category, quantity=None, best_before=date(2025, 10, 10))
+
+    def test_missing_best_before_raises_error(self):
+        # Ensures that creating a food without a best_before date raises an IntegrityError
+        with self.assertRaises(IntegrityError):
+            Food.objects.create(name='Spinach', category=self.category, quantity=1.0, best_before=None)
+
+    def test_missing_category_raises_error(self):
+        # Ensures that a food item must be linked to a category
+        with self.assertRaises(IntegrityError):
+            Food.objects.create(name='Cabbage', category=None, quantity=1.0, best_before=date(2025, 10, 10))
+
+    def test_delete_category_cascades_to_food(self):
+        # Tests that deleting a category also deletes associated food items (cascade)
+        food = Food.objects.create(name='Pumpkin', category=self.category, quantity=2.0, best_before=date(2025, 9, 15))
+        self.category.delete()
+        with self.assertRaises(Food.DoesNotExist):
+            Food.objects.get(id=food.id)
+
+    def test_update_food(self):
+        # Tests that food fields can be updated and changes persist
+        food = Food.objects.create(name='Beans', category=self.category, quantity=1.5, best_before=date(2025, 8, 20))
+        food.name = 'Green Beans'
+        food.quantity = 2.5
+        food.best_before = date(2025, 12, 25)
+        food.save()
+        updated = Food.objects.get(id=food.id)
+        self.assertEqual(updated.name, 'Green Beans')
+        self.assertEqual(updated.quantity, 2.5)
+        self.assertEqual(updated.best_before, date(2025, 12, 25))
+
