@@ -170,3 +170,50 @@ class FoodModelTest(TestCase):
         self.assertEqual(updated.quantity, 2.5)
         self.assertEqual(updated.best_before, date(2025, 12, 25))
 
+    def test_multiple_foods_same_category(self):
+        # Create two Food objects linked to the same Category
+        # Verify that the related_name 'foods' returns both items
+        Food.objects.create(name='Onion', category=self.category, quantity=2.0, best_before=date(2025, 10, 1))
+        Food.objects.create(name='Garlic', category=self.category, quantity=1.0, best_before=date(2025, 11, 1))
+        self.assertEqual(self.category.foods.count(), 2)
+
+    def test_filter_expired_foods(self):
+        # Create one expired and one fresh Food item based on best_before date
+        # Filter foods where best_before is less than today (expired)
+        # Assert only the expired item is returned by the query
+        Food.objects.create(name='Expired', category=self.category, quantity=1.0, best_before=date(2020, 1, 1))
+        Food.objects.create(name='Fresh', category=self.category, quantity=1.0, best_before=date(2030, 1, 1))
+        expired = Food.objects.filter(best_before__lt=date.today())
+        self.assertEqual(expired.count(), 1)
+        self.assertEqual(expired.first().name, 'Expired')
+
+    def test_bulk_create_foods(self):
+        # Use bulk_create to efficiently create multiple Food records at once
+        # Assert that all Food objects were saved successfully
+        foods = [
+            Food(name='Apple', category=self.category, quantity=5, best_before=date(2025, 10, 10)),
+            Food(name='Banana', category=self.category, quantity=3, best_before=date(2025, 11, 10)),
+        ]
+        Food.objects.bulk_create(foods)
+        self.assertEqual(Food.objects.count(), 2)
+
+    def test_zero_quantity(self):
+        # Create a Food item with zero quantity
+        # Assert that zero is accepted and saved correctly
+        food = Food.objects.create(name='Nothing', category=self.category, quantity=0.0, best_before=date(2025, 10, 10))
+        self.assertEqual(food.quantity, 0.0)
+
+    def test_negative_quantity(self):
+        # Create a Food item with negative quantity
+        # Assert that negative values are accepted and saved (depending on business rules)
+        food = Food.objects.create(name='Spoiled', category=self.category, quantity=-5.0, best_before=date(2025, 10, 10))
+        self.assertEqual(food.quantity, -5.0)
+
+    def test_same_food_name_different_categories(self):
+        # Create two categories
+        # Create Food items with the same name but under different categories
+        # Assert both Food items exist since name uniqueness is not enforced across categories
+        other_category = Category.objects.create(name='Fruits', unit='kg', ideal_quantity=10.0)
+        Food.objects.create(name='Tomato', category=self.category, quantity=1.0, best_before=date(2025, 10, 10))
+        Food.objects.create(name='Tomato', category=other_category, quantity=2.0, best_before=date(2025, 11, 10))
+        self.assertEqual(Food.objects.filter(name='Tomato').count(), 2)
