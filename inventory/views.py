@@ -9,7 +9,7 @@ def category_view(request):
 def food_view(request):
     return render(request, 'inventory/food.html')
 
-def search_view(request):
+def search_view(request,slug=None):
     return render(request, 'inventory/search.html')
 
 def shopping_view(request):

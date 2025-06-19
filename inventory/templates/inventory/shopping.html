@@ -1,5 +1,43 @@
 {% extends 'inventory/base.html' %}
 
 {% block content %}
-<h2>Here is your shopping list for missing items</h2>
+<div class="result-body" style="padding: 2rem; max-width: 900px; margin: auto;">
+
+  <h2 style="text-align: center; margin-bottom: 2rem; color: #333;">🛒 Food Inventory Shopping List</h2>
+
+  <table style="
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    ">
+    <thead style="background-color: #00b894; color: white;">
+      <tr>
+        <th style="padding: 1rem; text-align: left;">Category Name</th>
+        <th style="padding: 1rem; text-align: right;">Ideal Qty</th>
+        <th style="padding: 1rem; text-align: right;">Current Qty</th>
+        <th style="padding: 1rem; text-align: right;">To Purchase</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in shopping_items %}
+      <tr style="border-bottom: 1px solid #f0f0f0; transition: background 0.3s;">
+        <td style="padding: 1rem; font-weight: bold;">{{ item.category_name }}</td>
+        <td style="padding: 1rem; text-align: right;">{{ item.ideal_quantity }}</td>
+        <td style="padding: 1rem; text-align: right;">{{ item.current_quantity }}</td>
+        <td style="padding: 1rem; text-align: right; color: {% if item.needed_quantity > 0 %} #d63031 {% else %} #2ecc71 {% endif %};">
+          {{ item.needed_quantity }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="footer" style="text-align: right; margin-top: 1rem; font-size: 1rem; color: #555;">
+    <strong>{{ item_count }} item{{ item_count|pluralize }}</strong>
+  </div>
+
+</div>
 {% endblock %}
