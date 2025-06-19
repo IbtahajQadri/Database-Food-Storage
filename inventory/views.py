@@ -1,7 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from .models import Category, Food
+from inventory.models import Category, Food
 from datetime import date
+from django.utils.dateparse import parse_date
+from django.db.models import Q
 from datetime import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -234,10 +236,43 @@ def food_view(request):
 
     return render(request, 'inventory/food.html', context)
 
-def search_view(request):
-    return render(request, 'inventory/search.html')
+def search_view(request, slug=None):
+    food_items = []
+    item_count = 0
+    message = "food item fetched succesfully"
+    search = request.GET.get('search', '').strip()
+    if slug=="category":
+        food_items = Food.objects.filter(category__name__icontains=search)
+    elif slug == "best_before_date":
+        expires_before_date = parse_date(search)
+        if expires_before_date:
+            food_items = Food.objects.filter(best_before__lte=expires_before_date)
+        else: 
+            message = "Invalid date format"
+    else:
+        food_items = Food.objects.filter(
+                Q(name__icontains=search) | 
+                Q(category__name__icontains=search)
+            )
+    if not slug and not search or not food_items:
+        food_items = Food.objects.all()
+    item_count = food_items.count()
+
+    return render(request, 'inventory/search.html', {'items': food_items, 'item_count': item_count, 'message': message})
 
 def shopping_view(request):
-    return render(request, 'inventory/shopping.html')
+    categories = Category.objects.all()
+    shopping_items = []
+    
+    for category in categories:
+        if category.is_low_stock:
+            needed_quantity = category.ideal_quantity - category.current_quantity
+            shopping_items.append({
+                'category_name': category.name,
+                'current_quantity': category.current_quantity,
+                'ideal_quantity': category.ideal_quantity,
+                'needed_quantity': needed_quantity
+            })
+    return render(request, 'inventory/shopping.html', {'shopping_items': shopping_items, 'item_count': len(shopping_items)})
 
 
