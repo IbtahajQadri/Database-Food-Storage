@@ -90,9 +90,13 @@ def category_view(request):
                 error_message = "Please confirm category deletion."
             else:
                 category = get_object_or_404(Category, pk=category_id)
-                category.delete()
-                success_message = "Category deleted successfully!"
-                logger.info(f"Category deleted: ID {category_id}")
+                if category.foods.exists():
+                    error_message = 'Cannot delete category with associated food items.'
+                    logger.warning(f'Attempted deletion of category with foods: ID {category_id}')
+                else:
+                    category.delete()
+                    success_message = 'Category deleted successfully!'
+                    logger.info(f'Category deleted: ID {category_id}')
 
     if request.method == "GET":
         context["categories"] = Category.objects.all()
