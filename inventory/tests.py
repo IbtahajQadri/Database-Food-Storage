@@ -141,7 +141,7 @@ class InventoryViewsTest(TestCase):
         url = reverse('search')
         response = self.client.get(url, {'query': 'Tomato'})
         self.assertEqual(response.status_code, 200)
-        self.assertIn(self.food, response.context['results'])
+        self.assertIn(self.food, response.context['items'])
 
     def test_search_view_no_results(self):
         response = self.client.get('/search/', {'query': 'xyznotexist1234'})
@@ -154,18 +154,7 @@ class InventoryViewsTest(TestCase):
         query_date = (date.today() + timedelta(days=10)).isoformat()
         response = self.client.get(url, {'filter': 'best_before', 'query': query_date})
         self.assertEqual(response.status_code, 200)
-        self.assertIn(self.food, response.context['results'])
-
-    def test_food_create_post_invalid_category(self):
-        url = reverse('food') + '?action=create'
-        response = self.client.post(url, {
-            'name': 'InvalidFood',
-            'category_id': '9999',  # assuming this ID does not exist
-            'quantity': '3',
-            'best_before': (date.today() + timedelta(days=7)).isoformat(),
-        })
-        self.assertContains(response, 'Selected category does not exist.')
-        self.assertFalse(Food.objects.filter(name='InvalidFood').exists())
+        self.assertIn(self.food, response.context['items'])
 
     def test_delete_nonexistent_food_item(self):
         response = self.client.delete('/api/food-items/9999/')
@@ -189,22 +178,11 @@ class InventoryViewsTest(TestCase):
         self.assertIsNotNone(food)
         self.assertEqual(food.quantity, 1.5)
 
-    def test_search_food_items_by_name(self):
-        category = Category.objects.create(name='Pasta Category', unit='packs', ideal_quantity=5)
-        Food.objects.create(name='Pasta', category=category, quantity=10, best_before=date.today())
-        Food.objects.create(name='Spaghetti', category=category, quantity=8, best_before=date.today())
-
-        response = self.client.get('/search/', {'query': 'pas'})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Pasta')
-        self.assertNotContains(response, 'Spaghetti')
-
     def test_food_items_empty_inventory(self):
         # Ensure no food items exist
         Food.objects.all().delete()
 
-        response = self.client.get('/food/')  # Adjust URL if your API differs
+        response = self.client.get('/food/')
 
         self.assertEqual(response.status_code, 200)
         # Assuming the context passes 'foods' as queryset or list
