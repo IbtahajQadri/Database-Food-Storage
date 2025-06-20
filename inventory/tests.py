@@ -167,16 +167,6 @@ class InventoryViewsTest(TestCase):
         self.assertContains(response, 'Selected category does not exist.')
         self.assertFalse(Food.objects.filter(name='InvalidFood').exists())
 
-    def test_food_create_post_invalid_category(self):
-        url = reverse('food') + '?action=create'
-        response = self.client.post(url, {
-            'name': 'TestFood',
-            'category_id': 9999,  # invalid category ID
-            'quantity': '5',
-            'best_before': (date.today() + timedelta(days=7)).isoformat(),
-        })
-        self.assertEqual(response.status_code, 404)
-
     def test_delete_nonexistent_food_item(self):
         response = self.client.delete('/api/food-items/9999/')
         self.assertEqual(response.status_code, 404)
