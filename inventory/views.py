@@ -1,7 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from .models import Category, Food
+from inventory.models import Category, Food
 from datetime import date
+from django.utils.dateparse import parse_date
+from django.db.models import Q
 from datetime import datetime
 import logging
 
@@ -239,64 +241,43 @@ def food_view(request):
 
     return render(request, 'inventory/food.html', context)
 
-def search_view(request):
-    filter_type = request.GET.get('filter')
-    query = request.GET.get('query', '').strip()
-    results = []
-    message = ''
+def search_view(request, slug=None):
+    food_items = []
+    item_count = 0
+    message = "food item fetched succesfully"
+    search = request.GET.get('search', '').strip()
+    if slug=="category":
+        food_items = Food.objects.filter(category__name__icontains=search)
+    elif slug == "best_before_date":
+        expires_before_date = parse_date(search)
+        if expires_before_date:
+            food_items = Food.objects.filter(best_before__lte=expires_before_date)
+        else: 
+            message = "Invalid date format"
+    else:
+        food_items = Food.objects.filter(
+                Q(name__icontains=search) | 
+                Q(category__name__icontains=search)
+            )
+    if not slug and not search or not food_items:
+        food_items = Food.objects.all()
+    item_count = food_items.count()
 
-    if not filter_type:
-        # Case 1: No filter selected - Search both food name and category
-        if not query:
-            if 'query' in request.GET:
-                message = "Please enter a search term."
-        else:
-            food_matches = Food.objects.filter(name__icontains=query)
-            if food_matches.exists():
-                results = food_matches
-            else:
-                category_matches = Category.objects.filter(name__icontains=query)
-                if category_matches.exists():
-                    results = Food.objects.filter(category__in=category_matches)
-                    if not results:
-                        message = "No food items found in the matching categories."
-                else:
-                    message = "No matching food or category found."
-
-    elif filter_type == 'best_before':
-        # Case 2: Best Before Date filter
-        if not query:
-            message = "Please enter a date in YYYY-MM-DD format."
-        else:
-            try:
-                selected_date = datetime.strptime(query, '%Y-%m-%d').date()
-                results = Food.objects.filter(best_before__lte=selected_date).order_by('best_before')
-                if not results:
-                    message = f"No food items expiring on or before {selected_date}."
-            except ValueError:
-                message = "Please enter a valid date in YYYY-MM-DD format."
-
-    elif filter_type == 'category':
-        # Case 3: Category filter
-        if not query:
-            message = "Please enter a category name."
-        else:
-            category_matches = Category.objects.filter(name__icontains=query)
-            if category_matches.exists():
-                results = Food.objects.filter(category__in=category_matches)
-                if not results:
-                    message = "No food items found in the matching categories."
-            else:
-                message = "No matching categories found."
-
-    context = {
-        'results': results,
-        'message': message,
-        'filter_type': filter_type,
-        'query': query,
-    }
-    return render(request, 'inventory/search.html', context)
-
+    return render(request, 'inventory/search.html', {'items': food_items, 'item_count': item_count, 'message': message})
 
 def shopping_view(request):
-    return render(request, 'inventory/shopping.html')
+    categories = Category.objects.all()
+    shopping_items = []
+    
+    for category in categories:
+        if category.is_low_stock:
+            needed_quantity = category.ideal_quantity - category.current_quantity
+            shopping_items.append({
+                'category_name': category.name,
+                'current_quantity': category.current_quantity,
+                'ideal_quantity': category.ideal_quantity,
+                'needed_quantity': needed_quantity
+            })
+    return render(request, 'inventory/shopping.html', {'shopping_items': shopping_items, 'item_count': len(shopping_items)})
+
+
