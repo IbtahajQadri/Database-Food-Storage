@@ -137,3 +137,98 @@ class InventoryViewsTest(TestCase):
         self.assertTrue(Category.objects.filter(id=self.category.id).exists())
         self.assertContains(response, 'Cannot delete category with associated food items.')
 
+    def test_search_view_no_filter(self):
+        url = reverse('search')
+        response = self.client.get(url, {'query': 'Tomato'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.food, response.context['results'])
+
+    def test_search_view_no_results(self):
+        response = self.client.get('/search/', {'query': 'xyznotexist1234'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('message', response.context)
+        self.assertTrue(response.context['message'])  # Ensure message is not empty
+
+    def test_search_view_best_before_filter(self):
+        url = reverse('search')
+        query_date = (date.today() + timedelta(days=10)).isoformat()
+        response = self.client.get(url, {'filter': 'best_before', 'query': query_date})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.food, response.context['results'])
+
+    def test_food_create_post_invalid_category(self):
+        url = reverse('food') + '?action=create'
+        response = self.client.post(url, {
+            'name': 'InvalidFood',
+            'category_id': '9999',  # assuming this ID does not exist
+            'quantity': '3',
+            'best_before': (date.today() + timedelta(days=7)).isoformat(),
+        })
+        self.assertContains(response, 'Selected category does not exist.')
+        self.assertFalse(Food.objects.filter(name='InvalidFood').exists())
+
+    def test_food_create_post_invalid_category(self):
+        url = reverse('food') + '?action=create'
+        response = self.client.post(url, {
+            'name': 'TestFood',
+            'category_id': 9999,  # invalid category ID
+            'quantity': '5',
+            'best_before': (date.today() + timedelta(days=7)).isoformat(),
+        })
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_nonexistent_food_item(self):
+        response = self.client.delete('/api/food-items/9999/')
+        self.assertEqual(response.status_code, 404)
+        self.assertIn(b'not found', response.content.lower())
+
+    def test_add_food_item_with_decimal_quantity(self):
+        category = Category.objects.create(name='Dairy', unit='liters', ideal_quantity=10)
+        data = {
+            'name': 'Milk',
+            'category_id': category.id,
+            'quantity': '1.5',
+            'best_before': (date.today() + timedelta(days=10)).isoformat()
+        }
+        response = self.client.post('/food/?action=create', data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Food item created successfully!')
+
+        # Verify the food item was actually created with decimal quantity
+        food = Food.objects.filter(name='Milk', category=category).first()
+        self.assertIsNotNone(food)
+        self.assertEqual(food.quantity, 1.5)
+
+    def test_search_food_items_by_name(self):
+        category = Category.objects.create(name='Pasta Category', unit='packs', ideal_quantity=5)
+        Food.objects.create(name='Pasta', category=category, quantity=10, best_before=date.today())
+        Food.objects.create(name='Spaghetti', category=category, quantity=8, best_before=date.today())
+
+        response = self.client.get('/search/', {'query': 'pas'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Pasta')
+        self.assertNotContains(response, 'Spaghetti')
+
+    def test_food_items_empty_inventory(self):
+        # Ensure no food items exist
+        Food.objects.all().delete()
+
+        response = self.client.get('/food/')  # Adjust URL if your API differs
+
+        self.assertEqual(response.status_code, 200)
+        # Assuming the context passes 'foods' as queryset or list
+        foods = response.context.get('foods')
+        self.assertIsNotNone(foods)
+        self.assertEqual(len(foods), 0)
+        # Or check response content if JSON: self.assertJSONEqual(response.content, [])
+
+    def test_food_create_post_unknown_field(self):
+        data = {
+            "category": self.category.id,
+            "name": "Rice",
+            "quantity": 2,
+            "random": "value"  # unexpected field
+        }
+        response = self.client.post('/food/', data)
+        self.assertEqual(response.status_code, 200)

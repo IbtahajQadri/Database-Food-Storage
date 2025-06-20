@@ -8,16 +8,53 @@
     <form method="GET" action="{% url 'search' %}">
         <div class="search-controls">
             <label for="filter">Filter:</label>
-            <select name="filter" id="filter">
-                <option value="">-- Select an option --</option>
-                <option value="category">Based on Food Category</option>
-                <option value="best_before">Based on Best Before Date</option>
-            </select>
+<select name="filter" id="filter" aria-labelledby="filter-label filter-desc">
+    <option value="" {% if not filter_type %}selected{% endif %}>-- Select an option --</option>
+    <option value="category" {% if filter_type == 'category' %}selected{% endif %}>Based on Food Category</option>
+    <option value="best_before" {% if filter_type == 'best_before' %}selected{% endif %}>Based on Best Before Date</option>
+</select>            
 
-            <input type="text" name="query" placeholder="Search..." />
+<input 
+                type="{% if filter_type == 'best_before' %}date{% else %}text{% endif %}" 
+                name="query" 
+                placeholder="{% if filter_type == 'best_before' %}YYYY-MM-DD{% else %}Search...{% endif %}" 
+                value="{{ query|default:'' }}" 
+                required
+            />
             <button type="submit">Search</button>
         </div>
     </form>
 
+    {% if message %}
+        <p style="color:red;">{{ message }}</p>
+    {% endif %}
+
+    {% if results %}
+        <h3>Search Results</h3>
+        <table class="search-results-table">
+            <thead>
+                <tr>
+                    <th>Food Name</th>
+                    <th>Category</th>
+                    <th>Unit</th>
+                    <th>Quantity</th>
+                    <th>Best Before</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for food in results %}
+                <tr>
+                    <td>{{ food.name }}</td>
+                    <td>{{ food.category.name }}</td>
+                    <td>{{ food.category.unit }}</td>
+                    <td>{{ food.quantity }}</td>
+                    <td>{{ food.best_before }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif query and not message %}
+        <p>No matching results found.</p>
+    {% endif %}
 </div>
 {% endblock %}

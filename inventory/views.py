@@ -240,9 +240,63 @@ def food_view(request):
     return render(request, 'inventory/food.html', context)
 
 def search_view(request):
-    return render(request, 'inventory/search.html')
+    filter_type = request.GET.get('filter')
+    query = request.GET.get('query', '').strip()
+    results = []
+    message = ''
+
+    if not filter_type:
+        # Case 1: No filter selected - Search both food name and category
+        if not query:
+            if 'query' in request.GET:
+                message = "Please enter a search term."
+        else:
+            food_matches = Food.objects.filter(name__icontains=query)
+            if food_matches.exists():
+                results = food_matches
+            else:
+                category_matches = Category.objects.filter(name__icontains=query)
+                if category_matches.exists():
+                    results = Food.objects.filter(category__in=category_matches)
+                    if not results:
+                        message = "No food items found in the matching categories."
+                else:
+                    message = "No matching food or category found."
+
+    elif filter_type == 'best_before':
+        # Case 2: Best Before Date filter
+        if not query:
+            message = "Please enter a date in YYYY-MM-DD format."
+        else:
+            try:
+                selected_date = datetime.strptime(query, '%Y-%m-%d').date()
+                results = Food.objects.filter(best_before__lte=selected_date).order_by('best_before')
+                if not results:
+                    message = f"No food items expiring on or before {selected_date}."
+            except ValueError:
+                message = "Please enter a valid date in YYYY-MM-DD format."
+
+    elif filter_type == 'category':
+        # Case 3: Category filter
+        if not query:
+            message = "Please enter a category name."
+        else:
+            category_matches = Category.objects.filter(name__icontains=query)
+            if category_matches.exists():
+                results = Food.objects.filter(category__in=category_matches)
+                if not results:
+                    message = "No food items found in the matching categories."
+            else:
+                message = "No matching categories found."
+
+    context = {
+        'results': results,
+        'message': message,
+        'filter_type': filter_type,
+        'query': query,
+    }
+    return render(request, 'inventory/search.html', context)
+
 
 def shopping_view(request):
     return render(request, 'inventory/shopping.html')
-
-
