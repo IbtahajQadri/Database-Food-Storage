@@ -149,6 +149,29 @@ class InventoryViewsTest(TestCase):
         self.assertIn('message', response.context)
         self.assertTrue(response.context['message'])  # Ensure message is not empty
 
+    def test_search_food_by_name(self):
+        # Setup test data
+        category = Category.objects.create(
+            name="Fruits",
+            unit="kg",
+            ideal_quantity=10
+        )
+        food = Food.objects.create(
+            name="Banana",
+            quantity=5,
+            best_before=date.today(),
+            category=category
+        )
+
+        # Perform search
+        response = self.client.get("/search/", {"search": "banana"})
+
+        # Assertions
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Banana")
+        self.assertContains(response, "Fruits")
+        self.assertContains(response, "kg")
+
     def test_search_view_best_before_filter(self):
         url = reverse('search')
         query_date = (date.today() + timedelta(days=10)).isoformat()
