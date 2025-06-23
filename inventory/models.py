@@ -1,10 +1,9 @@
 from django.db import models
 from datetime import date
 
-# Create your models here.
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     unit = models.CharField(max_length=50)
     ideal_quantity = models.FloatField()
 

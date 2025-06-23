@@ -3,9 +3,11 @@ from django.utils import timezone
 from inventory.models import Category, Food
 from datetime import date
 from django.utils.dateparse import parse_date
+from django.db import IntegrityError
 from django.db.models import Q
 from datetime import datetime
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,6 +46,8 @@ def category_view(request):
                     ideal_quantity = float(ideal_quantity)
                     if ideal_quantity <= 0:
                         error_message = "Ideal quantity must be greater than zero."
+                    elif Category.objects.filter(name__iexact=name).exists():
+                        error_message = "Category name must be unique (case-insensitive)."
                     else:
                         category = Category(
                             name=name, unit=unit, ideal_quantity=ideal_quantity
@@ -69,13 +73,17 @@ def category_view(request):
                         error_message = "Ideal quantity must be greater than zero."
                     else:
                         category = get_object_or_404(Category, pk=category_id)
-                        category.name = name
-                        category.unit = unit
-                        category.ideal_quantity = ideal_quantity
-                        category.save()
-                        success_message = "Category modified successfully!"
-                        logger.info(f"Category modified: ID {category_id}")
-                        context["form_data"] = {}  # Clear form on success
+                        # Check for duplicates ignoring the current category itself
+                        if Category.objects.filter(name__iexact=name).exclude(pk=category.pk).exists():
+                            error_message = "Category name must be unique (case-insensitive)."
+                        else:
+                            category.name = name
+                            category.unit = unit
+                            category.ideal_quantity = ideal_quantity
+                            category.save()
+                            success_message = "Category modified successfully!"
+                            logger.info(f"Category modified: ID {category_id}")
+                            context["form_data"] = {}  # Clear form on success
                 except ValueError:
                     error_message = "Ideal quantity must be a number."
                 except IntegrityError:
@@ -91,9 +99,13 @@ def category_view(request):
                 error_message = "Please confirm category deletion."
             else:
                 category = get_object_or_404(Category, pk=category_id)
-                category.delete()
-                success_message = "Category deleted successfully!"
-                logger.info(f"Category deleted: ID {category_id}")
+                if category.foods.exists():
+                    error_message = 'Cannot delete category with associated food items.'
+                    logger.warning(f'Attempted deletion of category with foods: ID {category_id}')
+                else:
+                    category.delete()
+                    success_message = 'Category deleted successfully!'
+                    logger.info(f'Category deleted: ID {category_id}')
 
     if request.method == "GET":
         context["categories"] = Category.objects.all()
@@ -274,5 +286,3 @@ def shopping_view(request):
                 'needed_quantity': needed_quantity
             })
     return render(request, 'inventory/shopping.html', {'shopping_items': shopping_items, 'item_count': len(shopping_items)})
-
-
