@@ -8,7 +8,10 @@ image: python:latest
 test-job:
   stage: test
   script:
+    - echo "Applying Migrations."
+    - python manage.py migrate
     - echo "Running tests."
+    - python manage.py test
 
 
 release-docker:
