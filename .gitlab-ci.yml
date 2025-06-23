@@ -30,5 +30,3 @@ release-docker:
     - docker build --pull -t $CI_REGISTRY_IMAGE .
     - echo "Pushing Docker image to registry"
     - docker push $CI_REGISTRY_IMAGE
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
