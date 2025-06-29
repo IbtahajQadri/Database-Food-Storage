@@ -8,5 +8,96 @@
         Track, organize, and manage your food stock with ease.<br>
         Say goodbye to waste, and hello to efficiency.
     </p>
+    <!-- Summary stats -->
+    <div style="display: flex; gap: 30px; justify-content: center; margin-bottom: 40px;">
+        <div style="background-color: #007bff; color: white; padding: 20px; border-radius: 8px; width: 180px; text-align: center;">
+            <h3>{{ total_categories }}</h3>
+            <p>Total Categories</p>
+        </div>
+        <div style="background-color: #28a745; color: white; padding: 20px; border-radius: 8px; width: 180px; text-align: center;">
+            <h3>{{ total_food_items }}</h3>
+            <p>Total Food Items</p>
+        </div>
+        <div style="background-color: #dc3545; color: white; padding: 20px; border-radius: 8px; width: 220px; text-align: center;">
+            <h3>{{ num_categories_below_ideal }}</h3>
+            <p>Categories Below Ideal Quantity</p>
+        </div>
+    </div>
+
+    <!-- Side-by-side layout -->
+    <div style="display: flex; gap: 50px; justify-content: center; align-items: flex-start;">
+
+        <!-- Expiring Soon Section (Summary Only) -->
+        <div style="width: 45%;">
+            <h3>Expiring Soon (Next 7 days)</h3>
+            {% if expiring_soon_summary %}
+            <table class="search-results-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Items Expiring</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expiring_soon_summary %}
+                    <tr>
+                        <td>{{ item.category__name }}</td>
+                        <td>{{ item.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p>No items expiring in the next 7 days.</p>
+            {% endif %}
+        </div>
+
+        <!-- Category Stock Chart -->
+        <div style="width: 45%;">
+            <h3 style="text-align: center;">Category Stock vs Ideal</h3>
+            <canvas id="stockChart" height="240"></canvas>
+        </div>
+
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        const stockChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Current Quantity',
+                        data: {{ chart_current|safe }},
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                    },
+                    {
+                        label: 'Ideal Quantity',
+                        data: {{ chart_ideal|safe }},
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </main>
 {% endblock %}
