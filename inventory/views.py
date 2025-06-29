@@ -1,11 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from inventory.models import Category, Food
-from datetime import date
+from datetime import date, timedelta
 from django.utils.dateparse import parse_date
 from django.db import IntegrityError
-from django.db.models import Q
-from datetime import datetime
+from django.db.models import Q, Sum
 import logging
 
 logger = logging.getLogger(__name__)
