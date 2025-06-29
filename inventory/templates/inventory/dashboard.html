@@ -34,7 +34,7 @@
                 <thead>
                     <tr>
                         <th>Category</th>
-                        <th>Items Expiring</th>
+                        <th>Number of Food Items Expiring</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -71,12 +71,12 @@
                     {
                         label: 'Current Quantity',
                         data: {{ chart_current|safe }},
-                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)',
                     },
                     {
                         label: 'Ideal Quantity',
                         data: {{ chart_ideal|safe }},
-                        backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
                     }
                 ]
             },
