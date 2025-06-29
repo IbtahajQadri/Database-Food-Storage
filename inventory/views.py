@@ -1,18 +1,70 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from inventory.models import Category, Food
-from datetime import date
+from datetime import date, timedelta
 from django.utils.dateparse import parse_date
 from django.db import IntegrityError
-from django.db.models import Q
-from datetime import datetime
+from django.db.models import Q, Sum
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 def dashboard(request):
-    return render(request, "inventory/dashboard.html")
+    today = date.today()
+    next_7_days = today + timedelta(days=7)
+
+    # Summary stats
+    total_categories = Category.objects.count()
+    total_food_items = Food.objects.count()
+
+    # Categories below ideal quantity
+    categories_below_ideal = []
+    for category in Category.objects.all():
+        current_quantity = category.foods.aggregate(total=Sum('quantity'))['total'] or 0
+        if current_quantity < category.ideal_quantity:
+            categories_below_ideal.append({
+                'category': category,
+                'current_quantity': current_quantity,
+                'ideal_quantity': category.ideal_quantity,
+                'unit': category.unit,
+                'quantity_needed': category.ideal_quantity - current_quantity
+            })
+
+    num_categories_below_ideal = len(categories_below_ideal)
+
+    # Expiring soon food count per category (within next 7 days only)
+    expiring_soon_summary = []
+    for category in Category.objects.all():
+        count = category.foods.filter(best_before__gt=today, best_before__lte=next_7_days).count()
+        if count > 0:
+            expiring_soon_summary.append({
+                'category__name': category.name,
+                'count': count
+            })
+
+    # Bar chart data
+    chart_labels = []
+    chart_current = []
+    chart_ideal = []
+    for category in Category.objects.all():
+        current_quantity = category.foods.aggregate(total=Sum('quantity'))['total'] or 0
+        chart_labels.append(category.name)
+        chart_current.append(round(current_quantity, 2))
+        chart_ideal.append(round(category.ideal_quantity, 2))
+
+    context = {
+        'total_categories': total_categories,
+        'total_food_items': total_food_items,
+        'num_categories_below_ideal': num_categories_below_ideal,
+        'expiring_soon_summary': expiring_soon_summary,
+        'low_stock_categories': sorted(categories_below_ideal, key=lambda x: x['quantity_needed'], reverse=True)[:5],
+        'chart_labels': chart_labels,
+        'chart_current': chart_current,
+        'chart_ideal': chart_ideal,
+    }
+
+    return render(request, 'inventory/dashboard.html', context)
 
 
 def category_view(request):
