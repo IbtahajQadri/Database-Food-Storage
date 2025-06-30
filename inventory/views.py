@@ -239,26 +239,36 @@ def food_view(request):
 def search_view(request, slug=None):
     food_items = []
     item_count = 0
-    message = "food item fetched succesfully"
     search = request.GET.get('search', '').strip()
+    message = "items fetched successfully"
     if slug=="category":
-        food_items = Food.objects.filter(category__name__icontains=search)
+        if search:
+            food_items = Food.objects.filter(category__name__icontains=search)
+        if not food_items:
+            message = "No food items found for this category."
+            
     elif slug == "best_before_date":
         expires_before_date = parse_date(search)
         if expires_before_date:
             food_items = Food.objects.filter(best_before__lte=expires_before_date)
-        else: 
-            message = "Invalid date format"
+        else:
+            message = "Invalid date format. Please use YYYY-MM-DD."
     else:
         food_items = Food.objects.filter(
                 Q(name__icontains=search) | 
                 Q(category__name__icontains=search)
             )
+        if not food_items:
+            message = "No food items found matching your search criteria."
     if not slug and not search or not food_items:
-        food_items = Food.objects.all()
-    item_count = food_items.count()
+        if not food_items:
+            item_count = 0
+        else:
+            item_count = food_items.count()
+    else:
+        item_count = food_items.count()
 
-    return render(request, 'inventory/search.html', {'items': food_items, 'item_count': item_count, 'message': message})
+    return render(request, 'inventory/search.html', {'items': food_items, 'item_count': item_count, "message":message})
 
 def shopping_view(request):
     categories = Category.objects.all()
