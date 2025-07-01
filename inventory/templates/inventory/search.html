@@ -1,0 +1,85 @@
+{% extends 'inventory/base.html' %}
+
+{% block content %}
+<div class="search-container">
+    <h2>Welcome to the search menu</h2>
+    <p>Select a filter from the dropdown menu to refine your search</p>
+
+    <form method="GET" id="searchForm">
+        <div class="search-controls">
+            <label for="filter">Filter:</label>
+            <select name="filter" id="filter">
+                <option value="">-- Select an option --</option>
+                <option value="category">Based on Food Category</option>
+                <option value="best_before">Based on Best Before Date (YYYY-MM-DD)</option>
+            </select>
+
+            <input type="text" name="search" id="queryInput" placeholder="Search..." />
+            <!-- <input type="hidden" name="render" value="1" /> -->
+            <button type="submit">Search</button>
+        </div>
+    </form>
+</div>
+<p class="result-body text-center"> {{ message }} </p>
+{% if items %}
+<div class="result-body">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Quantity</th>
+        <th>Unit</th>
+        <th>Best before date</th>
+        <th>Expiry Status</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+      <tr>
+        <td><strong>{{item.name}}</strong></td>
+        <td>{{item.category.name}}</td>
+        <td>{{item.quantity}}</td>
+        <td>{{item.category.unit}}</td>
+        <td>{{item.best_before}}</td>
+        <td><span class="{% if item.is_expired %}expired-product{% elif item.is_expiring_soon %}expiry-warning{% else %}expiry-ok{% endif %}">{% if item.is_expiring_soon %}⚠{% endif %} {{item.expiry_status}}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <strong>{{ item_count }} food item{{ item_count|pluralize }}</strong>
+  </div>
+</div>
+{% endif %}
+<script>
+  const form = document.getElementById('searchForm');
+  const filter = document.getElementById('filter');
+  const queryInput = document.getElementById('queryInput');
+
+  form.addEventListener('submit', function (e) {
+    const selected = filter.value;
+    const query = queryInput.value.trim();
+
+
+    // Set action URL based on filter
+    if (selected === 'category') {
+      form.action = '/search/category';
+      // queryInput.name = "category_name"
+    } else if (selected === 'best_before') {
+      form.action = '/search/best_before_date';
+      // queryInput.name = "expires_before"
+    } else {
+      if (queryInput.value.trim() !== '') {
+        form.action = '/search/';
+        // queryInput.name = "search"
+      } else {
+        e.preventDefault();
+        alert('Please select a valid Search filter.');
+        return;
+      }
+    }
+  });
+</script>
+{% endblock %}

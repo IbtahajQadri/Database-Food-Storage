@@ -2,13 +2,24 @@ stages:
   - test
   - release
 
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+
 image: python:latest
 
+before_script:
+  - python -m pip install --upgrade pip
+  - pip install -r requirements.txt
 
 test-job:
   stage: test
   script:
+    - echo "Applying Migrations."
+    - python manage.py migrate
     - echo "Running tests."
+    - python manage.py test
 
 
 release-docker:
@@ -25,4 +36,6 @@ release-docker:
     - echo "Pushing Docker image to registry"
     - docker push $CI_REGISTRY_IMAGE
   rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main")'
+  - if: '$CI_COMMIT_BRANCH == "develop"'
+  - if: '$CI_COMMIT_BRANCH == "main"'
