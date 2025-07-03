@@ -47,7 +47,7 @@ To access the GitLab Container Registry, you need to authenticate using a **Pers
 3. Run the Docker container with:
 
     ```bash
-    docker run -it --pull=always registry.gitlab.com/thi-wi/sweng/m-egm/team-25-03:latest
+    docker run -it --pull=always -p 8000:8000 registry.gitlab.com/thi-wi/sweng/m-egm/team-25-03:latest
     ```
 
 - The flag `--pull=always` ensures Docker always pulls the latest version of the image before running.
