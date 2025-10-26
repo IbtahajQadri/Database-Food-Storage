@@ -1,70 +1,91 @@
-# Team 25-03
+# Database Food Storage
 
-## Database Food Storage
+## Introduction
+This Project was created as part of an assignment in the "Software Engineering" Course in the Engineering and Management Masters Degree at Technische Hochschule Ingolstadt. The aim of this group project was to work together as a team with each member having a different role in the software development process such as "Tester", "CICD Responsible", "Software Architect" and "Group Manager". My contribution to this project was as a CICD reponsible where i implemented the CICD pipeline in GItlab along with major functionalities of the software. 
 
 ## Description
-A browser-based web application for managing household food inventory. It allows users to categorize food items, track quantities and expiration dates, search and remove consumed items, and identify shortages by comparing actual stock with ideal quantities to support efficient grocery planning.
+A browser-based web application for managing household food inventory. It allows users to categorize food items, track quantities and expiration dates, search and remove consumed items, and identify shortages by comparing actual stock with ideal quantities to support efficient grocery planning. The main features of this web application include:
+1. Creating a New Food Category, modifying an existing category in the database and deleting the category.
+2. Creating food items to add to a category, modifying its characteristics and deleting a specific food item.
+3. A search function which lets you search for food items based on categories or Expiry date.
+4. Shopping list function which lets you see which items are nearing their expiry date and what needs to be purchased.
+
+---
+
+## 🛠️ Local Setup Instructions: Running via DJango server
+
+### Step 1: Clone the Repository
+
+1. Clone Repo with the following git command.
+> git clone git@github.com:IbtahajQadri/Database-Food-Storage.git
+
+2. Move into the project repository.
+> cd team-25-03
+
+### Step 2: Create and Activate Virtual Environment
+
+1. Create a virtual environment (only once)
+> python3 -m venv venv
+
+2. Activate the environment
+
+- For Linux/macOS:
+> source venv/bin/activate
+
+- For Windows:
+> venv\Scripts\activate
+
+### Step 3: Install Dependencies
+
+> pip install -r requirements.txt
+
+### Step 4: Running the server
+> python manage.py runserver
+
+the web application will be accessible at: http://localhost:8000/
 
 ---
 
 ## 🚀 Client Setup Instructions: Running via Docker Image
 
-This guide explains how to download the pre-built Docker image from our GitLab Container Registry and run the application on your local system.
+The original implementation of this project, including the **GitLab CI/CD pipeline** and **Docker image**, was developed on a private GitLab repository as part of the course assignment.
 
-> **Note:** It is assumed that Docker is already installed on your system.
+Due to university access restrictions, the GitLab repository is **not publicly accessible**.  
+However, the `.gitlab-ci.yml` file and the Docker file is included in this repository for reference.
 
-### Step 1: Generate a GitLab Access Token
+🐳 Run with Docker
 
-To access the GitLab Container Registry, you need to authenticate using a **Personal Access Token**:
+You can run the Food Storage Django web application easily using Docker.
 
-1. Log in to your GitLab account.
-2. Click your avatar (top left corner) and select **Edit Profile**.
-3. Navigate to **Access Tokens**.
-4. Create a new token named e.g., `"Container registry token"`.
-5. Select the scopes:
-   - `read_registry`
-   - `write_registry` (optional if you don’t plan to push images)
-6. Click **Create personal access token** and **save the token securely** — you won’t be able to see it again.
+1️⃣ Build the Docker image
 
----
+Make sure you’re in the folder containing the Dockerfile:
 
-### Step 2: Log in to GitLab Container Registry from your Terminal
+docker build -t food-storage .
 
-1. Go to your project’s **Container Registry** page on GitLab.
-2. Click **CLI Commands** to expand the login command.
-3. Copy the login command, which looks like:
-   ```bash
-   docker login registry.gitlab.com -u <your-username> -p <your-access-token>
-   ```
-4. Paste and run this command in your terminal to authenticate Docker with GitLab.
 
----
+This will build a Docker image named food-storage using your Dockerfile.
 
-### Step 3: Pull and Run the Docker Image
+2️⃣ Run the container
+docker run -d -p 8000:8000 food-storage
 
-1. In the Container Registry, find the image you want to run.
-2. Copy the full image path (e.g., `registry.gitlab.com/thi-wi/sweng/m-egm/team-25-03:latest`).
-3. Run the Docker container with:
 
-    ```bash
-    docker run -it --pull=always -p 8000:8000 registry.gitlab.com/thi-wi/sweng/m-egm/team-25-03:latest
-    ```
+Open your browser and visit:
+http://localhost:8000
 
-- The flag `--pull=always` ensures Docker always pulls the latest version of the image before running.
+3️⃣ Stop the container (optional)
+docker ps               # List running containers
+docker stop <container_id>
 
----
+4️⃣ Rebuild after code changes
+docker build --no-cache -t food-storage .
 
-### Step 4: Access the Application
+--- 
 
-Once the container is running, the web application will be accessible at:
-http://localhost:8000/
+👥 Contributors
 
-Open this URL in your web browser to start using the Food Storage App.
-
----
-
-## Notes
-
-- Ensure Docker is installed on your system before following these steps.
-- If you encounter any issues logging in or pulling the image, verify your access token and permissions.
-- Contact the development team for further support 😊
+Team 25-03 (THI Software Engineering Course)
+Hafiz Ali
+Patience Dikio
+Hashim Hasnain Hadi
+Ibtahaj Athar Qadri
